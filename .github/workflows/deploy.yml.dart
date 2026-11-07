@@ -1,0 +1,51 @@
+
+name: Deploy Eventify
+
+on:
+push:
+branches: [main]
+workflow_dispatch:
+
+permissions:
+contents: read
+pages: write
+id-token: write
+
+concurrency:
+group: pages
+cancel-in-progress: true
+
+jobs:
+deploy:
+runs-on: ubuntu-latest
+
+environment:
+name: github-pages
+url: ${{ steps.deployment.outputs.page_url }}
+
+steps:
+- name: Checkout repository
+uses: actions/checkout@v4
+
+- name: Install Flutter
+uses: subosito/flutter-action@v2
+with:
+channel: stable
+
+- name: Install dependencies
+run: flutter pub get
+
+- name: Build website
+run: flutter build web --release --base-href "/Eventify/"
+
+- name: Setup GitHub Pages
+uses: actions/configure-pages@v5
+
+- name: Upload website
+uses: actions/upload-pages-artifact@v3
+with:
+path: build/web
+
+- name: Deploy website
+id: deployment
+uses: actions/deploy-pages@v4
