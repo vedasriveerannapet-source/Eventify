@@ -1,10 +1,12 @@
-import 'pages/events_page.dart';
 import 'package:flutter/material.dart';
-import 'pages/schedule_page.dart';
+
 import 'pages/home_page.dart';
 import 'pages/about_page.dart';
-import 'theme/app_theme.dart';
+import 'pages/events_page.dart';
+import 'pages/schedule_page.dart';
 import 'pages/contact_page.dart';
+import 'theme/app_theme.dart';
+
 void main() {
   runApp(const EventifyApp());
 }
@@ -31,7 +33,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-
   int selectedIndex = 0;
 
   final List<String> menuItems = [
@@ -42,8 +43,17 @@ class _MainPageState extends State<MainPage> {
     'Contact',
   ];
 
+  void changePage(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 700;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -55,17 +65,39 @@ class _MainPageState extends State<MainPage> {
           ),
         ),
         actions: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
+          if (isMobile)
+            PopupMenuButton<int>(
+              icon: const Icon(
+                Icons.menu,
+                color: AppTheme.primary,
+              ),
+              onSelected: changePage,
+              itemBuilder: (context) {
+                return List.generate(
+                  menuItems.length,
+                      (index) => PopupMenuItem<int>(
+                    value: index,
+                    child: Text(
+                      menuItems[index],
+                      style: TextStyle(
+                        color: selectedIndex == index
+                            ? AppTheme.primary
+                            : Colors.black87,
+                        fontWeight: selectedIndex == index
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            )
+          else
+            Row(
               children: List.generate(
                 menuItems.length,
                     (index) => TextButton(
-                  onPressed: () {
-                    setState(() {
-                      selectedIndex = index;
-                    });
-                  },
+                  onPressed: () => changePage(index),
                   child: Text(
                     menuItems[index],
                     style: TextStyle(
@@ -80,25 +112,24 @@ class _MainPageState extends State<MainPage> {
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 15),
         ],
       ),
-
-
 
       body: IndexedStack(
         index: selectedIndex,
-        children: const [
-          HomePage(),
-          AboutPage(),
-          EventsPage(),
-          SchedulePage(),
-          ContactPage(),
+        children: [
+          HomePage(
+            onExploreEvents: () => changePage(2),
+          ),
+          const AboutPage(),
+          EventsPage(
+            onRegister: () => changePage(4),
+          ),
+          const SchedulePage(),
+          const ContactPage(),
         ],
       ),
-
-
     );
   }
 }
